@@ -1,16 +1,21 @@
 class Player {
 
   constructor(x, y) {
+    // Motion
     this.position = createVector(x, y);
     this.velocity = createVector(0, 0);
     this.acceleration = createVector(0, 0);
+    this.dragForce = createVector(0, 0);
+    this.dragFactor = 0.2;
+    this.mass = 10;
+    this.gravity = 1;
+    
+    // Draw
     this.w = 5;
     this.h = 10;
     this.speed = 50;
 
-    this.mass = 10;
-    this.dragFactor = 0.2;
-    this.dragForce = createVector(0, 0);
+    
   }
 
   draw() {
@@ -36,13 +41,19 @@ class Player {
       this.acceleration.y += this.speed / this.mass;
     }
     
-    // Equation of motions
+    /* EQUATIONS OF MOTION */
+    
+    // Drag
     this.dragForce.x = this.velocity.x * this.dragFactor; 
     this.dragForce.y = this.velocity.y * this.dragFactor;
     
     this.acceleration.x -= this.dragForce.x;
     this.acceleration.y -= this.dragForce.y;
     
+    // Gravity
+    this.acceleration.y += this.gravity;
+    
+    // Basic Euler
     this.velocity.x += this.acceleration.x;
     this.velocity.y += this.acceleration.y;
     
@@ -51,7 +62,9 @@ class Player {
     
     // If the player goes offscreen wrap around
     this.position.x = (this.position.x + width)  % width;
-    this.position.y = (this.position.y + height) % height;
+    if(this.position.y > (height - this.h)){
+       this.position.y = height - this.h;
+    }
   }
 
 }

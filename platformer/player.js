@@ -24,10 +24,6 @@ class Player {
     this.grounded = false;
     
   }
-  
-  setGrounded(grounded){
-    this.grounded = grounded
-  };
 
   draw() {
     rect(this.position.x, this.position.y, this.w, this.h);
@@ -35,8 +31,6 @@ class Player {
 
   move() {
     this.acceleration.x = this.acceleration.y = 0;
-    
-    console.log(this.grounded);
     
     if(this.grounded) this.velocity.y = 0;
     
@@ -82,3 +76,5 @@ class Player {
   }
 
 }
+
+

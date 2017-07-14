@@ -72,7 +72,11 @@ class World {
   }
 
   /*
-   *  TODO: Implement a Sprite class containing x,y,w,h and a texture, then add a method for
-   *  spriteIntersectsGround(sprite)
+   *  Tests whether a sprite's rectangle intersects with the ground
+   *  Test case:
+   *  world.spriteIntersectsGround(sprite)
    */
+  spriteIntersectsGround(sprite) {
+    return this.rectIntersectsGround(sprite.x, sprite.y, sprite.w, sprite.h);
+  }
 }

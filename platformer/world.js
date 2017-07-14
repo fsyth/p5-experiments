@@ -52,6 +52,35 @@ class World {
   pointIntersectsGround(point) {
     return this.isGround(point.x, point.y);
   }
+  
+  /*
+   *  Tests if any pixels along the length of a line are grounded
+   *  These lines are required to be either horizontal or vertical
+   */
+  lineVIntersectsGround(x1, y1, dy){
+    this.start = dy > 0 ? y1: y1 + dy;
+    this.end = dy > 0 ? y1 + dy: y1;
+    for(let i = this.start; i <= this.end; i ++){
+      if (this.isGround(x1, i)) {
+        return true;
+      }
+    }
+    
+    return false;
+  }
+  
+  lineHIntersectsGround(x1, y1, dx){
+    this.start = dx > 0 ? x1: x1 + dx;
+    this.end = dx > 0 ? x1 + dx: x1;
+    for(let i = this.start; i <= this.end; i ++){
+      if (this.isGround(i, y1)) {
+        return true;
+      }
+    }
+    
+    return false;
+  }
+  
 
   /*
    *  Tests whether any of the pixels in a given rectangle are ground.

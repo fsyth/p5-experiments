@@ -1,20 +1,78 @@
+/*
+ *  A class for randomly generated terrain, with methods for ground detection
+ */
 class World {
+  /*
+   *  Pass in the threshold below which ground is generated and the spatial frequency of the noise
+   *  used in generation.
+   */
   constructor(threshold, frequency) {
     this.threshold = threshold;
     this.frequency = frequency;
+
+    this.groundColor = color(130, 100, 90);
+    this.skyColor = color(230, 250, 250);
+
     this.image = createImage(width, height);
     this.image.loadPixels();
-    for (let row = 0; row < width; row++) {
-      for (let col = 0; col < height; col++) {
-        this.image.set(row, col,
-          noise(row * this.frequency, col * this.frequency) > this.threshold ?
-          color(230, 250, 250) : color(130, 100, 90));
+
+    for (let i = 0; i < width; i++) {
+      for (let j = 0; j < height; j++) {
+        this.image.set(i, j, this.isGround(i, j) ? this.groundColor : this.skyColor);
       }
     }
+
     this.image.updatePixels();
   }
 
+  /*
+   *  Uses Perlin noise to determine whether a given pixel coordinate should be ground or sky.
+   *  This is used both in generated the underlying image, and in ground detection with other
+   *  geometry.
+   *  If the noise is below the threshold, it is ground. Else, it is sky. Therefore, reduce the
+   *  threshold to create sparser worlds. Increase the threshold to create denser worlds.
+   *  world.isGround(player.position.x, player.position.y)
+   */
+  isGround(x, y) {
+    return noise(x * this.frequency, y * this.frequency) < this.threshold;
+  }
+
+  /*
+   *  Draws the underlying generated image.
+   */
   draw() {
     image(this.image, 0, 0);
   }
+
+  /*
+   *  Tests whether the given point is a ground pixel.
+   *  Test case:
+   *  world.pointIntersectsGround(player.position)
+   */
+  pointIntersectsGround(point) {
+    return this.isGround(point.x, point.y);
+  }
+
+  /*
+   *  Tests whether any of the pixels in a given rectangle are ground.
+   *  Test case:
+   *  world.rectIntersectsGround(
+   *    player.position.x, player.position.y,
+   *    player.w, player.h)
+   */
+  rectIntersectsGround(x, y, w, h) {
+    for (let i = x; i < x + w; i++) {
+      for (let j = y; j < y + h; j++) {
+        if (this.isGround(i, j)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  /*
+   *  TODO: Implement a Sprite class containing x,y,w,h and a texture, then add a method for
+   *  spriteIntersectsGround(sprite)
+   */
 }

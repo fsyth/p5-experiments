@@ -11,9 +11,7 @@ function setup() {
 
 function draw() {
   world.draw();
-  player.move();
-  player.grounded = world.rectIntersectsGround(
-    player.position.x, player.position.y, player.w, player.h);
+  player.update();
   player.draw();
 }
 

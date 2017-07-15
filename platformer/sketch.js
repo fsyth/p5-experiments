@@ -13,6 +13,7 @@ function setup() {
 
 function draw() {
   world.draw();
+  grapple.update();
   player.update();
   player.draw();
   grapple.draw();

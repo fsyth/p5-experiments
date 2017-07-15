@@ -11,7 +11,7 @@ class Player {
     
     // Drag
     this.dragForce = createVector(0, 0);
-    this.dragFactor = 0.02;
+    this.dragFactor = 0.2;
     
     // Properties
     this.mass = 10;
@@ -63,33 +63,48 @@ class Player {
     this.wallL = world.lineVIntersectsGround(this.positionNew.x, this.positionNew.y, this.h) 
     this.wallR = world.lineVIntersectsGround(this.positionNew.x + this.w, this.positionNew.y, this.h);
     this.wall = this.wallL || this.wallR;
-    
-    console.log(this.wall);
+  }
+  
+  addAcceleration(vec){
+    this.acceleration.add(vec);
+  }
+  
+  addAcceleration(ddx, ddy){
+    this.acceleration.x += ddx;
+    this.acceleration.y += ddy;
+  }
+  
+  addForce(forceVector){
+    this.acceleration.add(forceVector.div(this.mass));
+  }
+  
+  addForce(Fx, Fy){
+    this.acceleration.x += Fx / this.mass;
+    this.acceleration.y += Fy / this.mass;
   }
 
   move() {
-    this.acceleration.x = this.acceleration.y = 0;
     
     if(this.grounded) this.velocity.y = 0;
     if(this.wall) this.velocity.x = 0;
     
     if (keyIsDown(LEFT_ARROW)) {
       if(!this.wallL){
-        this.acceleration.x -= this.WalkForce / this.mass;
+        this.addForce(-this.WalkForce, 0);
         this.wall = false;
       }
     }
 
     if (keyIsDown(RIGHT_ARROW)) {
       if(!this.wallR){
-        this.acceleration.x += this.WalkForce / this.mass;
+        this.addForce(this.WalkForce, 0);
         this.wall = false;
       }
     }
 
     if (keyIsDown(UP_ARROW)) {
       if(this.grounded){
-        this.acceleration.y -= this.JumpForce / this.mass;
+        this.addForce(0, -this.JumpForce);
         this.grounded = false;
       }
     }
@@ -100,11 +115,10 @@ class Player {
     if(!this.wall)this.dragForce.x = this.velocity.x * this.dragFactor; 
     if(!this.grounded)this.dragForce.y = this.velocity.y * this.dragFactor;
     
-    if(!this.wall)this.acceleration.x -= this.dragForce.x;
-    if(!this.grounded)this.acceleration.y -= this.dragForce.y;
+    //this.addForce(this.dragForce);
     
     // Gravity
-    if(!this.grounded)this.acceleration.y += this.gravity;
+    if(!this.grounded) this.addAcceleration(0, this.gravity);
     
     // Basic Euler
     if(!this.wall)this.velocity.x += this.acceleration.x;
@@ -118,8 +132,10 @@ class Player {
     if( this.positionNew.y > (height - this.h)){
         this.positionNew.y = height - this.h;
     }
+    
+    // Clear accelerations for next time
+    this.acceleration.x = this.acceleration.y = 0;
   }
-
 }
 
 

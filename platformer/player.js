@@ -84,28 +84,28 @@ class Player {
     this.wallR = world.lineVIntersectsGround(this.positionNew.x + this.w, this.positionNew.y, this.h);
     this.wall = this.wallL || this.wallR;
   }
-  
-  addAcceleration(vec){
-    this.acceleration.add(vec);
-  }
-  
+
   addAcceleration(ddx, ddy){
     this.acceleration.x += ddx;
     this.acceleration.y += ddy;
   }
-  
-  addForce(vec){
-    vec.div(this.mass);
-    this.acceleration.add(forceVector);
+
+  addAccelerationVec(vec){
+    this.acceleration.add(vec);
   }
-  
+
   addForce(Fx, Fy){
     this.acceleration.x += Fx / this.mass;
     this.acceleration.y += Fy / this.mass;
   }
 
+  addForceVec(vec){
+    vec.div(this.mass);
+    this.acceleration.add(vec);
+  }
+
   move() {
-    
+
     if(this.grounded) this.velocity.y = 0;
     if(this.wall) this.velocity.x = 0;
 
@@ -135,9 +135,9 @@ class Player {
     // Drag
     if(!this.wall)this.dragForce.x = -this.velocity.x * this.dragFactor;
     if(!this.grounded)this.dragForce.y = -this.velocity.y * this.dragFactor;
-    
+
     this.addForce(this.dragForce.x, this.dragForce.y);
-    
+
     // Gravity
     if(!this.grounded) this.addAcceleration(0, this.gravity);
 
@@ -153,7 +153,7 @@ class Player {
     if( this.positionNew.y > (height - this.h)){
         this.positionNew.y = height - this.h;
     }
-    
+
     // Clear accelerations for next time
     this.acceleration.x = this.acceleration.y = 0;
   }

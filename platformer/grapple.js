@@ -9,7 +9,10 @@ class Grapple {
     this.startPoint = startPt;
     this.endPoint = null;
     this.targetPoint = null;
+    this.velocity = null;
     this.speed = 10;
+    this.stiffness = 0.01;
+    this.maxLength = 500;
     this.drawState = this.drawRetracted;
   }
 
@@ -17,39 +20,41 @@ class Grapple {
   onMousePressed() {
     this.endPoint = this.startPoint.copy();
     this.targetPoint = createVector(mouseX, mouseY);
-  }
-
-  onMouseDragged() {
-
+    this.velocity = p5.Vector.sub(this.targetPoint, this.startPoint).limit(this.speed);
   }
 
   onMouseReleased() {
-    //this.targetPoint = null;
+    this.targetPoint = null;
   }
 
   update() {
     // Check if a target point is set. If so, it is extending or extended.
     if (this.targetPoint) {
       if (world.pointIntersectsGround(this.endPoint)) {
-        // Once the grapple end point hits ground, it is fully extended
+        // Hit ground -> fully extended
+
         this.drawState = this.drawExtended;
-      } else if (this.endPoint.equals(this.targetPoint)) {
-        // If the grapple reaches its target without hitting anything, retract it
+
+        // Apply a force to the player in towards endpoint
+        player.addAccelerationVec(
+          p5.Vector.sub(this.endPoint, this.startPoint).mult(this.stiffness));
+
+      } else if (p5.Vector.sub(this.endPoint, this.startPoint).magSq() > sq(this.maxLength)) {
+        // If the grapple reaches its maximum length without hitting anything, retract it
         this.targetPoint = null;
         this.drawState = this.drawRetracting;
+
       } else {
         // The grapple has not hit ground, so is still extending. Move the end towards the target.
-        this.drawState = this.drawExtending();
-        this.endPoint.add(p5.Vector
-          .sub(this.targetPoint, this.endPoint)
-          .limit(this.speed));
+        this.drawState = this.drawExtending;
+        this.endPoint.add(this.velocity);
       }
+
     } else if (this.endPoint) {
       // If there there is an end point but no target, the grapple must be retracting
       this.drawState = this.drawRetracting;
-      this.endPoint.add(p5.Vector
-        .sub(this.startPoint, this.endPoint)
-        .limit(this.speed));
+      this.velocity = p5.Vector.sub(this.startPoint, this.endPoint).limit(this.speed);
+      this.endPoint.add(this.velocity);
 
       // The grapple is no longer in flight once it fully retracts
       if (this.endPoint.equals(this.startPoint)) {
@@ -60,7 +65,7 @@ class Grapple {
   }
 
   draw() {
-    if (this.drawState) this.drawState();
+    this.drawState();
   }
 
   drawRetracted() {
@@ -82,7 +87,7 @@ class Grapple {
     beginShape();
     for (let d = 0; d <= 1; d += increment) {
       curveVertex(d * distance,
-                  amp * d * (1 - d) * sin(d * d * distance * freq - frameCount * animSpeed));
+                  amp * d * (1 - d) * sin(sq(d) * distance * freq - frameCount * animSpeed));
     }
     endShape();
     pop();

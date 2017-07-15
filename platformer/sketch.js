@@ -23,10 +23,6 @@ function mousePressed() {
   grapple.onMousePressed();
 }
 
-function mouseDragged() {
-  grapple.onMouseDragged();
-}
-
 function mouseReleased() {
   grapple.onMouseReleased();
 }

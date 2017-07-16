@@ -1,14 +1,16 @@
-/*global Player, World, Grapple*/
+/*global Player, World, Grapple, SawBlade*/
 
 var player,
     world,
-    grapple;
+    grapple,
+    sawblade;
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
   player = new Player(200, 200);
   world = new World(0.4, 0.01);
   grapple = new Grapple(player.position);
+  sawblade = new SawBlade(300,300);
 }
 
 function draw() {
@@ -17,6 +19,8 @@ function draw() {
   player.update();
   player.draw();
   grapple.draw();
+  sawblade.draw();
+  sawblade.checkCollisionPlayer(player.position, player.w, player.h);
 }
 
 function mousePressed() {

@@ -58,8 +58,16 @@ class Player {
 
 
   update() {
+    // Check keyboard inputs
+    this.checkKeyboardInputs();
+    
+    // Apply the equations of motion to move the player
     this.move();
+    
+    // Check collisions with the world
     this.checkCollisions();
+    
+    // Finally update the position
     this.updatePosition();
   }
 
@@ -126,6 +134,30 @@ class Player {
     // Check for Collisions with the ceiling
     this.checkCeilingCollision();
   }
+  
+  checkKeyboardInputs() {
+    
+    if (keyIsDown(LEFT_ARROW) || keyIsDown(65)) { // 65 -> a
+      if (!this.wallL) {
+        this.addForce(-this.walkForce, 0);
+        this.wall = false;
+      }
+    }
+
+    if (keyIsDown(RIGHT_ARROW) || keyIsDown(68)) { // 68 -> d
+      if (!this.wallR) {
+        this.addForce(this.walkForce, 0);
+        this.wall = false;
+      }
+    }
+
+    if (keyIsDown(UP_ARROW) || keyIsDown(32) || keyIsDown(87)) { // 87 -> w, 32 -> space
+      if (this.grounded) {
+        this.addForce(0, -this.jumpForce);
+        this.grounded = false;
+      }
+    }
+  }
 
   addAcceleration(ddx, ddy) {
     this.acceleration.x += ddx;
@@ -147,50 +179,27 @@ class Player {
   }
 
   move() {
-
-    if (this.grounded) this.velocity.y = 0;
-    if (this.wall) this.velocity.x = 0;
-
-    if (keyIsDown(LEFT_ARROW) || keyIsDown(65)) { // 65 -> a
-      if (!this.wallL) {
-        this.addForce(-this.walkForce, 0);
-        this.wall = false;
-      }
-    }
-
-    if (keyIsDown(RIGHT_ARROW) || keyIsDown(68)) { // 68 -> d
-      if (!this.wallR) {
-        this.addForce(this.walkForce, 0);
-        this.wall = false;
-      }
-    }
-
-    if (keyIsDown(UP_ARROW) || keyIsDown(32) || keyIsDown(87)) { // 87 -> w, 32 -> space
-      if (this.grounded) {
-        this.addForce(0, -this.jumpForce);
-        this.grounded = false;
-      }
-    }
-
     /* EQUATIONS OF MOTION */
 
-    // Drag
+    // Calculate drag forces acting on the player
     if (!this.wall) this.dragForce.x = -this.velocity.x * this.dragFactor;
     if (this.grounded) {
       this.dragForce.x = -this.velocity.x * this.groundDragFactor;
     } else {
       this.dragForce.y = -this.velocity.y * this.dragFactor;
     }
-
+    
+    // Add the drag force to the player
     this.addForce(this.dragForce.x, this.dragForce.y);
 
-    // Gravity
+    // Add gravity to the acceleration
     if(!this.grounded) this.addAcceleration(0, this.gravity);
 
-    // Basic Euler
+    // Calculate the new velocities
     if (!this.wall) this.velocity.x += this.acceleration.x;
     if (!this.grounded) this.velocity.y += this.acceleration.y;
-
+    
+    // Calculate the new position
     this.positionNew.x = this.x + this.velocity.x;
     this.positionNew.y = this.y + this.velocity.y;
 
@@ -202,5 +211,10 @@ class Player {
 
     // Clear accelerations for next time
     this.acceleration.x = this.acceleration.y = 0;
+        
+    // Clear velocities for next time
+    if (this.grounded) this.velocity.y = 0;
+    if (this.wall) this.velocity.x = 0;
+
   }
 }

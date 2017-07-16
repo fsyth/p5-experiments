@@ -21,8 +21,8 @@ class Player {
     // Draw
     this.w = 5;
     this.h = 10;
-    this.WalkForce = 2;
-    this.JumpForce = 50;
+    this.walkForce = 2;
+    this.jumpForce = 50;
 
     // Collisions
     this.grounded = false;
@@ -53,32 +53,32 @@ class Player {
   }
 
   draw() {
-    rect(this.position.x, this.position.y, this.w, this.h);
+    rect(this.x, this.y, this.w, this.h);
   }
 
 
-  update(){
+  update() {
     this.move();
     this.checkCollisions();
     this.updatePosition();
   }
 
-  updatePosition(){
-    if(!this.grounded){
-      this.position.y = this.positionNew.y;
+  updatePosition() {
+    if (!this.grounded) {
+      this.y = this.positionNew.y;
     }
-    if(!this.wall){
-      this.position.x = this.positionNew.x;
+    if (!this.wall) {
+      this.x = this.positionNew.x;
     }
   }
-  
-  checkGroundCollision(){
+
+  checkGroundCollision() {
     // If the player is an the bottom of the map set grounded to true
-    if(this.positionNew.y + this.h >= height){
+    if (this.positionNew.y + this.h >= height) {
       this.grounded = true;
     } else {
       // Somewhere between positionNew and Old the ground exists
-      
+
       /*
             X     X   <-PLAYER
             X     X
@@ -87,87 +87,87 @@ class Player {
           ###   ######      Ground
       ##################### Ground
       */
-      
-      for(let y = this.position.y; y < this.positionNew.y; y++){
-        if(world.lineHIntersectsGround(this.positionNew.x, y + this.h, this.w)){
+
+      for (let y = this.y; y < this.positionNew.y; y++) {
+        if (world.lineHIntersectsGround(this.positionNew.x, y + this.h, this.w)) {
           // Set the new y position
           this.positionNew.y = y;
           this.grounded = true;
           return;
         }
       }
-      
+
       this.grounded = false;
     }
-    
+
   }
-  
-  checkWallCollision(){
-    
+
+  checkWallCollision() {
+
     this.wallL = world.lineVIntersectsGround(this.positionNew.x, this.positionNew.y, this.h - 1);
     this.wallR = world.lineVIntersectsGround(this.positionNew.x + this.w, this.positionNew.y, this.h - 1);
     this.wall = this.wallL || this.wallR;
   }
-  
-  checkCeilingCollision(){
-    if(world.lineHIntersectsGround(this.positionNew.x, this.positionNew.y, this.w)){
+
+  checkCeilingCollision() {
+    if (world.lineHIntersectsGround(this.positionNew.x, this.positionNew.y, this.w)) {
       // If there will be a collision reduce the speed by a factor 0.5 and ensure the velocity is positive
       this.velocity.y = 0.5 * abs(this.velocity.y);
     }
   }
 
-  checkCollisions(){
+  checkCollisions() {
     // Check for Ground Collisions
     this.checkGroundCollision();
 
     // Check for Wall Collisions
     this.checkWallCollision();
-    
+
     // Check for Collisions with the ceiling
     this.checkCeilingCollision();
   }
 
-  addAcceleration(ddx, ddy){
+  addAcceleration(ddx, ddy) {
     this.acceleration.x += ddx;
     this.acceleration.y += ddy;
   }
 
-  addAccelerationVec(vec){
+  addAccelerationVec(vec) {
     this.acceleration.add(vec);
   }
 
-  addForce(Fx, Fy){
+  addForce(Fx, Fy) {
     this.acceleration.x += Fx / this.mass;
     this.acceleration.y += Fy / this.mass;
   }
 
-  addForceVec(vec){
+  addForceVec(vec) {
     vec.div(this.mass);
     this.acceleration.add(vec);
   }
 
   move() {
 
-    if(this.grounded) this.velocity.y = 0;
-    if(this.wall) this.velocity.x = 0;
+    if (this.grounded) this.velocity.y = 0;
+    if (this.wall) this.velocity.x = 0;
 
-    if (keyIsDown(LEFT_ARROW)) {
-      if(!this.wallL){
-        this.addForce(-this.WalkForce, 0);
+    if (keyIsDown(LEFT_ARROW) || keyIsDown(65)) { // 65 -> a
+      if (!this.wallL) {
+        this.addForce(-this.walkForce, 0);
         this.wall = false;
       }
     }
 
-    if (keyIsDown(RIGHT_ARROW)) {
-      if(!this.wallR){
-        this.addForce(this.WalkForce, 0);
+    if (keyIsDown(RIGHT_ARROW) || keyIsDown(68)) { // 68 -> d
+      if (!this.wallR) {
+        this.addForce(this.walkForce, 0);
         this.wall = false;
       }
     }
 
-    if (keyIsDown(UP_ARROW)) {
-      if(this.grounded){
-        this.addForce(0, -this.JumpForce);
+    if (keyIsDown(UP_ARROW) || keyIsDown(32) || keyIsDown(87)) { // 87 -> w, 32 -> space
+      if (this.grounded) {
+        this.addForce(0, -this.jumpForce);
         this.grounded = false;
       }
     }
@@ -175,8 +175,8 @@ class Player {
     /* EQUATIONS OF MOTION */
 
     // Drag
-    if(!this.wall)this.dragForce.x = -this.velocity.x * this.dragFactor;
-    if(this.grounded){
+    if (!this.wall) this.dragForce.x = -this.velocity.x * this.dragFactor;
+    if (this.grounded) {
       this.dragForce.x = -this.velocity.x * this.groundDragFactor;
     } else {
       this.dragForce.y = -this.velocity.y * this.dragFactor;
@@ -188,15 +188,15 @@ class Player {
     if(!this.grounded) this.addAcceleration(0, this.gravity);
 
     // Basic Euler
-    if(!this.wall)this.velocity.x += this.acceleration.x;
-    if(!this.grounded)this.velocity.y += this.acceleration.y;
+    if (!this.wall) this.velocity.x += this.acceleration.x;
+    if (!this.grounded) this.velocity.y += this.acceleration.y;
 
-    this.positionNew.x = this.position.x + this.velocity.x;
-    this.positionNew.y = this.position.y + this.velocity.y;
+    this.positionNew.x = this.x + this.velocity.x;
+    this.positionNew.y = this.y + this.velocity.y;
 
     // If the player goes offscreen wrap around
-     this.positionNew.x = ( this.positionNew.x + width)  % width;
-    if( this.positionNew.y > (height - this.h)){
+     this.positionNew.x = (this.positionNew.x + width)  % width;
+    if (this.positionNew.y > (height - this.h)) {
         this.positionNew.y = height - this.h;
     }
 

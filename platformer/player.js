@@ -12,6 +12,7 @@ class Player {
     // Drag
     this.dragForce = createVector(0, 0);
     this.dragFactor = 0.2;
+    this.groundDragFactor = 0.2;
 
     // Properties
     this.mass = 10;
@@ -70,19 +71,60 @@ class Player {
       this.position.x = this.positionNew.x;
     }
   }
-
-  checkCollisions(){
-    // Check for Ground Collisions
+  
+  checkGroundCollision(){
+    // If the player is an the bottom of the map set grounded to true
     if(this.positionNew.y + this.h >= height){
       this.grounded = true;
     } else {
-      this.grounded = world.lineHIntersectsGround(this.positionNew.x, this.positionNew.y + this.h, this.w);
+      // Somewhere between positionNew and Old the ground exists
+      
+      /*
+            X     X   <-PLAYER
+            X     X
+            OOOOOOO
+                            Air
+          ###   ######      Ground
+      ##################### Ground
+      */
+      
+      for(let y = this.position.y; y < this.positionNew.y; y++){
+        if(world.lineHIntersectsGround(this.positionNew.x, y + this.h, this.w)){
+          // Set the new y position
+          this.positionNew.y = y;
+          this.grounded = true;
+          return;
+        }
+      }
+      
+      this.grounded = false;
     }
+    
+  }
+  
+  checkWallCollision(){
+    
+    this.wallL = world.lineVIntersectsGround(this.positionNew.x, this.positionNew.y, this.h - 1);
+    this.wallR = world.lineVIntersectsGround(this.positionNew.x + this.w, this.positionNew.y, this.h - 1);
+    this.wall = this.wallL || this.wallR;
+  }
+  
+  checkCeilingCollision(){
+    if(world.lineHIntersectsGround(this.positionNew.x, this.positionNew.y, this.w)){
+      // If there will be a collision reduce the speed by a factor 0.5 and ensure the velocity is positive
+      this.velocity.y = 0.5 * abs(this.velocity.y);
+    }
+  }
+
+  checkCollisions(){
+    // Check for Ground Collisions
+    this.checkGroundCollision();
 
     // Check for Wall Collisions
-    this.wallL = world.lineVIntersectsGround(this.positionNew.x, this.positionNew.y, this.h);
-    this.wallR = world.lineVIntersectsGround(this.positionNew.x + this.w, this.positionNew.y, this.h);
-    this.wall = this.wallL || this.wallR;
+    this.checkWallCollision();
+    
+    // Check for Collisions with the ceiling
+    this.checkCeilingCollision();
   }
 
   addAcceleration(ddx, ddy){
@@ -134,7 +176,11 @@ class Player {
 
     // Drag
     if(!this.wall)this.dragForce.x = -this.velocity.x * this.dragFactor;
-    if(!this.grounded)this.dragForce.y = -this.velocity.y * this.dragFactor;
+    if(this.grounded){
+      this.dragForce.x = -this.velocity.x * this.groundDragFactor;
+    } else {
+      this.dragForce.y = -this.velocity.y * this.dragFactor;
+    }
 
     this.addForce(this.dragForce.x, this.dragForce.y);
 
@@ -145,8 +191,8 @@ class Player {
     if(!this.wall)this.velocity.x += this.acceleration.x;
     if(!this.grounded)this.velocity.y += this.acceleration.y;
 
-    this.positionNew.x += this.velocity.x;
-    this.positionNew.y += this.velocity.y;
+    this.positionNew.x = this.position.x + this.velocity.x;
+    this.positionNew.y = this.position.y + this.velocity.y;
 
     // If the player goes offscreen wrap around
      this.positionNew.x = ( this.positionNew.x + width)  % width;

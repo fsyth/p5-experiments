@@ -10,9 +10,10 @@ class Grapple {
     this.endPoint = null;
     this.targetPoint = null;
     this.velocity = null;
-    this.speed = 10;
-    this.stiffness = 0.01;
-    this.maxLength = 500;
+    this.maxSpeed = 13;
+    this.stiffness = 0.1;
+    this.maxForce = 6;
+    this.maxLength = 350;
     this.drawState = this.drawRetracted;
   }
 
@@ -20,7 +21,7 @@ class Grapple {
   onMousePressed() {
     this.endPoint = this.startPoint.copy();
     this.targetPoint = createVector(mouseX, mouseY);
-    this.velocity = p5.Vector.sub(this.targetPoint, this.startPoint).limit(this.speed);
+    this.velocity = p5.Vector.sub(this.targetPoint, this.startPoint).limit(this.maxSpeed);
   }
 
   onMouseReleased() {
@@ -36,8 +37,8 @@ class Grapple {
         this.drawState = this.drawExtended;
 
         // Apply a force to the player in towards endpoint
-        player.addAccelerationVec(
-          p5.Vector.sub(this.endPoint, this.startPoint).mult(this.stiffness));
+        player.addForceVec(
+          p5.Vector.sub(this.endPoint, this.startPoint).mult(this.stiffness).limit(this.maxForce));
 
       } else if (p5.Vector.sub(this.endPoint, this.startPoint).magSq() > sq(this.maxLength)) {
         // If the grapple reaches its maximum length without hitting anything, retract it
@@ -53,7 +54,7 @@ class Grapple {
     } else if (this.endPoint) {
       // If there there is an end point but no target, the grapple must be retracting
       this.drawState = this.drawRetracting;
-      this.velocity = p5.Vector.sub(this.startPoint, this.endPoint).limit(this.speed);
+      this.velocity = p5.Vector.sub(this.startPoint, this.endPoint).limit(this.maxSpeed);
       this.endPoint.add(this.velocity);
 
       // The grapple is no longer in flight once it fully retracts
@@ -75,7 +76,7 @@ class Grapple {
   drawExtending() {
     let displacement = p5.Vector.sub(this.endPoint, this.startPoint),
         distance = displacement.mag(),
-        increment = 1 / distance;
+        increment = 10 / distance;
 
     const amp = 30,
           freq = 0.1,
@@ -85,6 +86,7 @@ class Grapple {
     translate(this.startPoint.x, this.startPoint.y);
     rotate(atan2(displacement.y, displacement.x));
     beginShape();
+    curveVertex(0, 0);
     for (let d = 0; d <= 1; d += increment) {
       curveVertex(d * distance,
                   amp * d * (1 - d) * sin(sq(d) * distance * freq - frameCount * animSpeed));

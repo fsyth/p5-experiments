@@ -83,6 +83,7 @@ class Grapple {
           animSpeed = 1;
 
     push();
+    noFill();
     translate(this.startPoint.x, this.startPoint.y);
     rotate(atan2(displacement.y, displacement.x));
     beginShape();

@@ -25,7 +25,11 @@ function draw() {
   player.draw();
   grapple.draw();
   sawblade.draw();
-  sawblade.checkCollisionPlayer(player.position, player.w, player.h);
+  if (sawblade.checkCollisionPlayer()) {
+    fill(255, 0, 0);
+  } else {
+    fill(255);
+  }
 }
 
 function mousePressed() {

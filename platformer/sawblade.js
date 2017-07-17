@@ -2,9 +2,9 @@
 
 class SawBlade {
 
-  constructor(x, y) {
+  constructor(x, y, r) {
     this.position = createVector(x, y);
-    this.radius = 16;
+    this.radius = r;
     this.detectionRadius = this.radius * 3;
 
     // Sprite - not actually implemented yet
@@ -35,6 +35,14 @@ class SawBlade {
 
   set r(r) {
     this.radius = r;
+  }
+
+  update() {
+    if (this.checkCollisionPlayer()) {
+      fill(255, 0, 0);
+    } else {
+      fill(255);
+    }
   }
 
   /*

@@ -17,7 +17,6 @@ function setup() {
 }
 
 function draw() {
-  background(230, 250, 250);
   world.draw();
   grapple.update();
   player.update();

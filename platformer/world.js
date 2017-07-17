@@ -61,8 +61,8 @@ class World {
     this.noiseMap = new Array(this.mapWidth * this.mapHeight);
     this.groundMap = new Array(this.mapWidth * this.mapHeight).fill(false);
 
-    for (let i = 0; i < this.buffer.height; i++) {
-      for (let j = 0; j < this.buffer.width; j++) {
+    for (let i = 0; i < this.mapHeight; i++) {
+      for (let j = 0; j < this.mapWidth; j++) {
         let n = this.generateNoise(j, i);
         this.noiseMap[j + i * this.mapWidth] = n;
 
@@ -129,13 +129,14 @@ class World {
     //return this.buffer.get(x, y).alpha === 0;
 
     // This is faster, but will become out of date if the terrain changes
-    return this.groundMap[(x + y * width) / this.tileSizeDrawn | 0];
+    return this.groundMap[(x / this.tileSizeDrawn | 0) + (y / this.tileSizeDrawn | 0) * this.mapWidth];
   }
 
   /*
    *  Draws the underlying generated image.
    */
   draw() {
+    background(230, 250, 250);
     image(this.buffer, 0, 0, width, height);
   }
 
@@ -153,9 +154,10 @@ class World {
    *  These lines are required to be either horizontal or vertical
    */
   lineVIntersectsGround(x1, y1, dy){
-    var start = dy > 0 ? y1 : y1 + dy,
-        end = dy > 0 ? y1 + dy : y1;
-    for(let i = this.start; i <= this.end; i ++){
+    var start = min(y1, y1 + dy),
+        end = max(y1,  y1 + dy);
+
+    for (let i = start; i <= end; i++) {
       if (this.isGround(x1, i)) {
         return true;
       }
@@ -165,9 +167,10 @@ class World {
   }
 
   lineHIntersectsGround(x1, y1, dx){
-    var start = dx > 0 ? x1 : x1 + dx,
-        end = dx > 0 ? x1 + dx : x1;
-    for(let i = this.start; i <= this.end; i ++){
+    var start = min(x1, x1 + dx),
+        end = max(x1, x1 + dx);
+
+    for (let i = start; i <= end; i++) {
       if (this.isGround(i, y1)) {
         return true;
       }

@@ -43,11 +43,12 @@ class Sprite {
     // Check if circle touches the edges of the rectangle
     // If the centre distance is bigger than their combined radii/half-widths,
     // they are out of range of each other not intersecting
-    if (dx > rect.w/2 + circle.r) return false;
-    if (dy > rect.h/2 + circle.r) return false;
+    if (dx > rect.w/2 + circle.r ||
+        dy > rect.h/2 + circle.r) return false;
 
     // Check if the circle's centre lies within the rectangle
-    if (dx <= rect.w/2 && dy <= rect.h/2) return true;
+    if (dx <= rect.w/2 &&
+        dy <= rect.h/2) return true;
 
     // Special case for the corners of the rectangle intersecting the circle.
     // Compare the distance from the reactangle's corner to the centre of the circle with the

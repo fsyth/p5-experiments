@@ -2,7 +2,7 @@
 
 class SawBlade {
 
-  constructor (x, y){
+  constructor(x, y) {
     this.position = createVector(x, y);
     this.radius = 16;
     this.detectionRadius = this.radius * 3;
@@ -91,8 +91,8 @@ class SawBlade {
   }
 
   draw() {
-    ellipse(this.position.x,
-            this.position.y,
+    ellipse(this.x,
+            this.y,
             this.radius * 2,
             this.radius * 2);
   }

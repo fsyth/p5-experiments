@@ -34,7 +34,7 @@ class World {
    *  Load in all the tiles required for the world
    */
   load() {
-    this.tileSet = loadImage('Assets/worldBlocksRaw.png');
+    this.tileSet = loadImage('assets/tileset.png');
     this.tileNone = createImage(this.tileSizeDrawn, this.tileSizeDrawn);
     this.tileNone.loadPixels();
     this.tileNone.pixels.fill(0);

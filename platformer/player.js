@@ -22,7 +22,7 @@ class Player {
     this.w = 5;
     this.h = 10;
     this.walkForce = 2;
-    this.jumpForce = 50;
+    this.jumpForce = 75;
 
     // Collisions
     this.grounded = false;
@@ -60,13 +60,13 @@ class Player {
   update() {
     // Check keyboard inputs
     this.checkKeyboardInputs();
-    
+
     // Apply the equations of motion to move the player
     this.move();
-    
+
     // Check collisions with the world
     this.checkCollisions();
-    
+
     // Finally update the position
     this.updatePosition();
   }
@@ -134,24 +134,26 @@ class Player {
     // Check for Collisions with the ceiling
     this.checkCeilingCollision();
   }
-  
+
   checkKeyboardInputs() {
-    
-    if (keyIsDown(LEFT_ARROW) || keyIsDown(65)) { // 65 -> a
+    // Left, A
+    if (keyIsDown(LEFT_ARROW) || keyIsDown(65)) {
       if (!this.wallL) {
         this.addForce(-this.walkForce, 0);
         this.wall = false;
       }
     }
 
-    if (keyIsDown(RIGHT_ARROW) || keyIsDown(68)) { // 68 -> d
+    // Right, D
+    if (keyIsDown(RIGHT_ARROW) || keyIsDown(68)) {
       if (!this.wallR) {
         this.addForce(this.walkForce, 0);
         this.wall = false;
       }
     }
 
-    if (keyIsDown(UP_ARROW) || keyIsDown(32) || keyIsDown(87)) { // 87 -> w, 32 -> space
+    // Up, Space, W
+    if (keyIsDown(UP_ARROW) || keyIsDown(32) || keyIsDown(87)) {
       if (this.grounded) {
         this.addForce(0, -this.jumpForce);
         this.grounded = false;
@@ -188,7 +190,7 @@ class Player {
     } else {
       this.dragForce.y = -this.velocity.y * this.dragFactor;
     }
-    
+
     // Add the drag force to the player
     this.addForce(this.dragForce.x, this.dragForce.y);
 
@@ -198,20 +200,20 @@ class Player {
     // Calculate the new velocities
     if (!this.wall) this.velocity.x += this.acceleration.x;
     if (!this.grounded) this.velocity.y += this.acceleration.y;
-    
+
     // Calculate the new position
     this.positionNew.x = this.x + this.velocity.x;
     this.positionNew.y = this.y + this.velocity.y;
 
     // If the player goes offscreen wrap around
-     this.positionNew.x = (this.positionNew.x + width)  % width;
+    this.positionNew.x = (this.positionNew.x + width) % width;
     if (this.positionNew.y > (height - this.h)) {
         this.positionNew.y = height - this.h;
     }
 
     // Clear accelerations for next time
     this.acceleration.x = this.acceleration.y = 0;
-        
+
     // Clear velocities for next time
     if (this.grounded) this.velocity.y = 0;
     if (this.wall) this.velocity.x = 0;

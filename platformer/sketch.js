@@ -4,10 +4,15 @@ var player,
     world,
     grapple;
 
+function preload() {
+  world = new World(0.4, 0.01);
+  world.load();
+}
+
 function setup() {
   createCanvas(windowWidth, windowHeight);
+  world.init();
   player = new Player(200, 200);
-  world = new World(0.4, 0.01);
   grapple = new Grapple(player.position);
 }
 

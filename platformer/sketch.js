@@ -5,7 +5,7 @@ var player,
     grapple;
 
 function preload() {
-  world = new World(0.4, 0.01);
+  world = new World(0.4, 0.1);
   world.load();
 }
 
@@ -17,6 +17,7 @@ function setup() {
 }
 
 function draw() {
+  background(230, 250, 250);
   world.draw();
   grapple.update();
   player.update();

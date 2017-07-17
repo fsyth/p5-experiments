@@ -128,6 +128,7 @@ class World {
     // This is far too slow and leaks a ton of memory:
     //return this.buffer.get(x, y).alpha === 0;
 
+    // This is faster, but will become out of date if the terrain changes
     return this.groundMap[(x + y * width) / this.tileSizeDrawn | 0];
   }
 

@@ -1,4 +1,4 @@
-/*global Sprite, player*/
+/*global Sprite, player, Geometry*/
 
 class SawBlade {
 
@@ -65,37 +65,7 @@ class SawBlade {
            \__/
     */
 
-    // Quick calculations to determine if the player is close
-    //if(abs(player.x - this.position.x) > this.detectionRadius) return false;
-    //if(abs(player.y - this.position.y) > this.detectionRadius) return false;
-
-    return Sprite.intersectionCircleRectangle(this, player);
-
-    /* This method has some issues. The circle can nestle between points while intersecting
-     * the rectangle. Use Sptire.intersectionCircleRectangle instead, as above
-
-    // If the player is close do more precise collisions
-    // If any of the players corners are within the circle then a collision has been detected
-    this.tmpVec = player.position.copy();
-
-    // Top Left
-    if (this.checkCollisionPointAndCircle(this.tmpVec)) return true;
-
-    // Top Right
-    this.tmpVec.x += player.w;
-    if (this.checkCollisionPointAndCircle(this.tmpVec)) return true;
-
-    // Bottom Right
-    this.tmpVec.y += player.h;
-    if (this.checkCollisionPointAndCircle(this.tmpVec)) return true;
-
-    // Bottom Left
-    this.tmpVec.x -= player.w;
-    if (this.checkCollisionPointAndCircle(this.tmpVec)) return true;
-
-    // If none of the coordinates intersect the circle then return false
-    return false;
-    */
+    return Geometry.intersectionCircleRectangle(this, player);
   }
 
   draw() {

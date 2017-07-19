@@ -74,10 +74,15 @@ class World {
         // null will be returned for a none tile, so no drawing should be done.
         let index = this.tileIndexFromNoise(n);
 
+        // Apply some crude lighting
+        this.buffer.tint((n - 0.15) / 0.25 * 255);
+
         // Create the specified tile
         this.createTile(index, i, j);
       }
     }
+
+    this.buffer.noTint();
   }
 
   /*

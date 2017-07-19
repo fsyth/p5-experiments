@@ -68,16 +68,78 @@ class World {
         let n = this.generateNoise(j, i);
 
         // Store the noise in a map
-        this.noiseMap[j + i * this.mapWidth] = n;
+        this.noiseMap[this.lin_ij(i, j)] = n;
 
         // Get the index of the tile on the tileset
         // null will be returned for a none tile, so no drawing should be done.
-        let index = this.noiseToTileIndex(n);
+        let index = this.tileIndexFromNoise(n);
 
         // Create the specified tile
         this.createTile(index, i, j);
       }
     }
+  }
+
+  /*
+   *  Gets row i, column j tile coordinates from the tile's x,y pixel position
+   */
+  ij_xy(x, y) {
+    if (Array.isArray(x)) [x, y] = x;
+
+    return [y / this.tileSizeDrawn | 0,
+            x / this.tileSizeDrawn | 0];
+  }
+
+  /*
+   *  Gets x,y pixel coordinates from row i, column j tile coordinates
+   */
+  xy_ij(i, j) {
+    if (Array.isArray(i)) [i, j] = i;
+
+    return [j * this.tileSizeDrawn,
+            i * this.tileSizeDrawn];
+  }
+
+  /*
+   *  Gets a linear map index from tile coordinates row i, column j
+   */
+  lin_ij(i, j) {
+    if (Array.isArray(i)) [i, j] = i;
+
+    return j + i * this.mapWidth;
+  }
+
+  /*
+   *  Gets row i, column j tile coordinates from a linear map index
+   */
+  ij_lin(lin) {
+    return [lin / this.mapWidth | 0,
+            lin % this.mapWidth | 0];
+  }
+
+  /*
+   *  Gets a linear map index from pixel coordinates x,y
+   */
+  lin_xy(x, y) {
+    if (Array.isArray(x)) [x, y] = x;
+
+    return (x / this.tileSizeDrawn | 0) + (y / this.tileSizeDrawn | 0) * this.mapWidth;
+  }
+
+  /*
+   *  Gets pixel coordinates x,y from a linear map index
+   */
+  xy_lin(lin) {
+    return [(lin / this.mapWidth | 0) * this.tileSizeDrawn,
+            (lin % this.mapWidth | 0) * this.tileSizeDrawn];
+  }
+
+  /*
+   *  Gets a Uint8 address in a pixel buffer from x,y pixel coordinates
+   *  and channel c of 'r', 'g', 'b' or 'a'.
+   */
+  byteAddress_xyc(x, y, c) {
+    return 'rgba'.indexOf(c) + 4 * (x + y * this.buffer.width);
   }
 
   /*
@@ -90,7 +152,7 @@ class World {
   /*
    *  Converts a noise value (range 0-1) to a tile
    */
-  noiseToTileIndex(n) {
+  tileIndexFromNoise(n) {
     if (n < 0.30) return this.tileIndex.concrete;
     if (n < 0.32) return this.tileIndex.steel;
     if (n < 0.33) return this.tileIndex.creepyBricks;
@@ -102,7 +164,7 @@ class World {
   /*
    *  Maps a tile index onto its pixel coordinates on the tileset spritesheet
    */
-  tileIndexToCoord(index) {
+  coordFromTileIndex(index) {
     return index.map(e => e * (this.tileSizeActual + 1));
   }
 
@@ -122,18 +184,18 @@ class World {
       this.dirty = false;
     }
 
-    this.groundMap[j + i * this.mapWidth] = true;
+    this.groundMap[this.lin_ij(i, j)] = true;
 
     // Convert the index to pixel coordinates on the tileset
-    let coord = this.tileIndexToCoord(index);
+    let [sx, sy] = this.coordFromTileIndex(index);
 
     this.buffer.image(this.tileSet,
                       this.tileSizeDrawn * j,
                       this.tileSizeDrawn * i,
                       this.tileSizeDrawn,
                       this.tileSizeDrawn,
-                      coord[0],
-                      coord[1],
+                      sx,
+                      sy,
                       this.tileSizeActual,
                       this.tileSizeActual);
   }
@@ -149,22 +211,28 @@ class World {
       this.buffer.loadPixels();
     }
 
-    this.groundMap[j + i * this.mapWidth] = false;
+    this.groundMap[this.lin_ij(i, j)] = false;
 
-    // Manually set the alpha channel of pixels to transparent. This seems a bit overkill, but replace
-    // blending a transparent image over the top doesn't seem to work.
+    // Manually set the alpha channel of pixels to transparent. This seems a bit overkill, but
+    // replace blending a transparent image over the top doesn't seem to work.
     for (let y = i * this.tileSizeDrawn; y < (i + 1) * this.tileSizeDrawn; y++) {
       for (let x = j * this.tileSizeDrawn; x < (j + 1) * this.tileSizeDrawn; x++) {
-        this.buffer.pixels[3 + 4 * (x + y * this.buffer.width)] = 0;
+        this.buffer.pixels[this.byteAddress_xyc(x, y, 'a')] = 0;
       }
     }
 
-    /*this.buffer.blendMode(REPLACE);
+
+    // These methods should work, but there may be something wrong with p5's current implementation
+
+    /*
+    this.buffer.blendMode(REPLACE);
     this.buffer.image(this.tileNone,
                       this.tileSizeDrawn * j,
-                      this.tileSizeDrawn * i);*/
+                      this.tileSizeDrawn * i);
+    */
 
-    /*this.buffer.blend(this.tileNone,
+    /*
+    this.buffer.blend(this.tileNone,
                       0,
                       0,
                       this.tileSizeDrawn,
@@ -173,56 +241,19 @@ class World {
                       this.tileSizeDrawn * i,
                       this.tileSizeDrawn,
                       this.tileSizeDrawn,
-                      REPLACE);*/
+                      REPLACE);
+    */
   }
 
   /*
-   *  Destroy a batch of tiles in one go to avoid excessive pixel loads and updates
-   *  coordList should be an array of (row, col) coordinates. For example:
-   *  coordList = [
-   *    [19, 20],
-   *    [20, 19],
-   *    [20, 20],
-   *    [20, 21],
-   *    [21, 20]
-   *  ]
-   */
-  destroyTiles(coordList) {
-    if (!this.dirty) {
-      this.dirty = true;
-      this.buffer.loadPixels();
-    }
-
-    for (let [i, j] of coordList) {
-        // Remove from collision detection
-        this.groundMap[j + i * this.mapWidth] = false;
-
-        // Manually set the alpha channel of pixels to transparent. This seems a bit overkill, but
-        // replace blending a transparent image over the top doesn't seem to work.
-        for (let y = i * this.tileSizeDrawn; y < (i + 1) * this.tileSizeDrawn; y++) {
-          for (let x = j * this.tileSizeDrawn; x < (j + 1) * this.tileSizeDrawn; x++) {
-            this.buffer.pixels[3 + 4 * (x + y * this.buffer.width)] = 0;
-          }
-        }
-    }
-
-    this.buffer.updatePixels();
-  }
-
-  /*
-   *  Uses Perlin noise to determine whether a given pixel coordinate should be ground or sky.
-   *  This is used both in generated the underlying image, and in ground detection with other
-   *  geometry.
-   *  If the noise is below the threshold, it is ground. Else, it is sky. Therefore, reduce the
-   *  threshold to create sparser worlds. Increase the threshold to create denser worlds.
-   *  world.isGround(player.position.x, player.position.y)
+   *  Given a pixel coordinate x, y, returns whether that tile is ground and collideable or not.
    */
   isGround(x, y) {
     // This is far too slow and leaks a ton of memory:
     //return this.buffer.get(x, y).alpha === 0;
 
-    // This is faster, but will become out of date if the terrain changes
-    return this.groundMap[(x / this.tileSizeDrawn | 0) + (y / this.tileSizeDrawn | 0) * this.mapWidth];
+    // This is faster, but requires the ground map to be kept up to date
+    return this.groundMap[this.lin_xy(x, y)];
   }
 
   /*

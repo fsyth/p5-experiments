@@ -15,18 +15,33 @@ class World {
 
     // Tile size actual is the size of the tile images.
     // Tiles may be scaled up to tile size drawn at lower pixel density.
-    this.tileSizeActual = 8;
+    this.tileSizeActual = 16;
+    this.tilePadding = 2;
     this.tileSizeDrawn = 16;
 
 
-    // Tile names and their x,y indices in the tile set
+    // Tile names and their row,column indices in the tile set
     this.tileIndex = {
       none: null,
-      steel: [0,0],
-      creepyBricks: [1,0],
-      clay: [2,0],
-      sandstone: [3,0],
-      concrete: [4,0]
+      default: {
+        tileset: undefined,
+        steel:       [0, 0],
+        creepyBrick: [0, 1],
+        clay:        [0, 2],
+        sandstone:   [0, 3],
+        concrete:    [0, 4]
+      },
+      jungle: {
+        tileset: undefined,
+        grass:      [0, 0],
+        swamp:      [0, 1],
+        mud:        [0, 2],
+        clay:       [0, 3],
+        goldBrick:  [0, 4],
+        ash:        [0, 5],
+        stoneBrick: [1, 0],
+        stoneBlock: [1, 1]
+      }
     };
 
     // Dirty flag to keep track of changes made to the buffer
@@ -38,7 +53,8 @@ class World {
    *  Load in all the tiles required for the world
    */
   load() {
-    this.tileSet = loadImage('tiles/tileset.png');
+    this.tileIndex.default.tileset = loadImage('tiles/tileset.png');
+    this.tileIndex.jungle.tileset  = loadImage('tiles/biome-jungle-16.png');
 
     // By default, the image will be transparent black
     this.tileNone = createImage(this.tileSizeDrawn, this.tileSizeDrawn);
@@ -158,11 +174,30 @@ class World {
    *  Converts a noise value (range 0-1) to a tile
    */
   tileIndexFromNoise(n) {
-    if (n < 0.30) return this.tileIndex.concrete;
-    if (n < 0.32) return this.tileIndex.steel;
-    if (n < 0.33) return this.tileIndex.creepyBricks;
-    if (n < 0.35) return this.tileIndex.sandstone;
-    if (n < 0.40) return this.tileIndex.clay;
+    /////// Temporarily hard-code biome
+    var biome = 'jungle';
+
+    // Get the tileset for the biome
+    var tileset = this.tileIndex[biome];
+
+    // Map the noise value onto a tile
+    switch (biome) {
+      case 'jungle':
+        if (n < 0.28) return tileset.ash;
+        if (n < 0.30) return tileset.goldBrick;
+        if (n < 0.32) return tileset.clay;
+        if (n < 0.36) return tileset.mud;
+        if (n < 0.38) return tileset.swamp;
+        if (n < 0.40) return tileset.grass;
+        break;
+
+      default:
+        if (n < 0.30) return tileset.concrete;
+        if (n < 0.32) return tileset.steel;
+        if (n < 0.34) return tileset.creepyBrick;
+        if (n < 0.36) return tileset.sandstone;
+        if (n < 0.40) return tileset.clay;
+    }
     return this.tileIndex.none;
   }
 
@@ -170,7 +205,9 @@ class World {
    *  Maps a tile index onto its pixel coordinates on the tileset spritesheet
    */
   coordFromTileIndex(index) {
-    return index.map(e => e * (this.tileSizeActual + 1));
+    var [i, j] = index;
+    return [j * (this.tileSizeActual + this.tilePadding),
+            i * (this.tileSizeActual + this.tilePadding)];
   }
 
   /*
@@ -178,6 +215,10 @@ class World {
    *  The function also ensures that the ground map used for collision detection is updated.
    */
   createTile(index, i, j) {
+    ////// Temporarily hard code the biome
+    var biome = 'jungle';
+
+
     // Don't draw none or undefined tiles
     if (index === null) {
       return;
@@ -194,7 +235,10 @@ class World {
     // Convert the index to pixel coordinates on the tileset
     let [sx, sy] = this.coordFromTileIndex(index);
 
-    this.buffer.image(this.tileSet,
+    // Get the tilset image based on the biome
+    let tileset = this.tileIndex[biome].tileset;
+
+    this.buffer.image(tileset,
                       this.tileSizeDrawn * j,
                       this.tileSizeDrawn * i,
                       this.tileSizeDrawn,

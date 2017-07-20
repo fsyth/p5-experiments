@@ -6,7 +6,7 @@ var player,
     sawblade;
 
 function preload() {
-  world = new World(0.4, 0.1);
+  world = new World();
   world.load();
 }
 

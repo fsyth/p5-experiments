@@ -6,10 +6,7 @@ class World {
    *  Pass in the threshold below which ground is generated and the spatial frequency of the noise
    *  used in generation.
    */
-  constructor(threshold, frequency) {
-    this.threshold = threshold;
-    this.frequency = frequency;
-
+  constructor() {
     //this.groundColor = color(130, 100, 90);
     //this.skyColor = color(230, 250, 250);
 
@@ -19,6 +16,9 @@ class World {
     this.tilePadding = 2;
     this.tileSizeDrawn = 16;
 
+    // Frequncies for the noise function. The higher the frequency, the smaller the patches formed.
+    this.tileNoiseFrequency = 0.1;
+    this.biomeNoiseFrequency = 0.01;
 
     // Tile names and their row,column indices in the tile set
     this.tileIndex = {
@@ -53,7 +53,7 @@ class World {
    *  Load in all the tiles required for the world
    */
   load() {
-    this.tileIndex.default.tileset = loadImage('tiles/tileset.png');
+    this.tileIndex.default.tileset = loadImage('tiles/worldBlocks16x16.png');
     this.tileIndex.jungle.tileset  = loadImage('tiles/biome-jungle-16.png');
 
     // By default, the image will be transparent black
@@ -81,20 +81,24 @@ class World {
     for (let i = 0; i < this.mapHeight; i++) {
       for (let j = 0; j < this.mapWidth; j++) {
         // Make some noise
-        let n = this.generateNoise(j, i);
+        let tileNoise = this.generateNoise(i, j, this.tileNoiseFrequency),
+            biomeNoise = this.generateNoise(i, j, this.biomeNoiseFrequency);
 
         // Store the noise in a map
-        this.noiseMap[this.lin_ij(i, j)] = n;
+        this.noiseMap[this.lin_ij(i, j)] = [tileNoise, biomeNoise];
+
+        // Use noise to select a biome
+        let biome = this.biomeFromNoise(biomeNoise);
 
         // Get the index of the tile on the tileset
         // null will be returned for a none tile, so no drawing should be done.
-        let index = this.tileIndexFromNoise(n);
+        let index = this.tileIndexFromNoise(tileNoise, biome);
 
         // Apply some crude lighting
-        this.buffer.tint((n - 0.15) / 0.25 * 255);
+        this.buffer.tint((tileNoise - 0.15) / 0.25 * 255);
 
         // Create the specified tile
-        this.createTile(index, i, j);
+        this.createTile(index, biome, i, j);
       }
     }
 
@@ -164,19 +168,18 @@ class World {
   }
 
   /*
-   *  Uses Perlin noise to determine which tile to place in a given tile coordinate.
+   *  Uses Perlin noise to determine which tile or biome to place in a given tile coordinate.
+   *  Pass in the i,j coordinates of the tile, as well as the frequency of the noise to generate.
    */
-  generateNoise(i, j) {
-    return noise(i * this.frequency, j * this.frequency);
+  generateNoise(i, j, f) {
+    return noise(i * f,
+                 j * f);
   }
 
   /*
-   *  Converts a noise value (range 0-1) to a tile
+   *  Converts a noise value (range 0-1) to a tile index as [i, j] coordinates on the tileset
    */
-  tileIndexFromNoise(n) {
-    /////// Temporarily hard-code biome
-    var biome = 'jungle';
-
+  tileIndexFromNoise(n, biome) {
     // Get the tileset for the biome
     var tileset = this.tileIndex[biome];
 
@@ -202,6 +205,13 @@ class World {
   }
 
   /*
+   *  Converts a noise value (range 0-1) to the name of a biome as a string
+   */
+  biomeFromNoise(n) {
+    return n < 0.5 ? 'default' : 'jungle';
+  }
+
+  /*
    *  Maps a tile index onto its pixel coordinates on the tileset spritesheet
    */
   coordFromTileIndex(index) {
@@ -214,11 +224,7 @@ class World {
    *  Draws a given tile index (e.g. world.tileIndex.clay) at row i, column j in the map grid.
    *  The function also ensures that the ground map used for collision detection is updated.
    */
-  createTile(index, i, j) {
-    ////// Temporarily hard code the biome
-    var biome = 'jungle';
-
-
+  createTile(index, biome, i, j) {
     // Don't draw none or undefined tiles
     if (index === null) {
       return;

@@ -79,7 +79,7 @@ class World {
     // Seed the world
     if (!seed) {
       // If no seed was provided, produce a string of random chars
-      seed = random(0, 1e6);
+      seed = random(0, 1e5) | 0;
     }
     this.seed = seed;
     noiseSeed(seed);
@@ -208,7 +208,7 @@ class World {
   }
 
   subBiomeFromNoise(n) {
-    return n > 0.8 ? 'building': 'default';
+    return n > 0.7 ? 'building': 'default';
   }
 
   /*

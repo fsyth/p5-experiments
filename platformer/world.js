@@ -18,6 +18,7 @@ class World {
 
     // Frequncies for the noise function. The higher the frequency, the smaller the patches formed.
     this.tileNoiseFrequency = 0.1;
+    this.subFromNoise = 0.05;
     this.biomeNoiseFrequency = 0.01;
 
     // Tile names and their row,column indices in the tile set
@@ -25,22 +26,30 @@ class World {
       none: null,
       default: {
         tileset: undefined,
-        steel:       [0, 0],
-        creepyBrick: [0, 1],
-        clay:        [0, 2],
-        sandstone:   [0, 3],
-        concrete:    [0, 4]
+        default: {
+          clay:        [0, 0],
+          concrete:    [0, 1]
+        },
+        building: {
+          steel:       [1, 0],
+          creepyBrick: [1, 1],
+          sandstone:   [1, 2],
+        }
       },
       jungle: {
         tileset: undefined,
-        grass:      [0, 0],
-        swamp:      [0, 1],
-        mud:        [0, 2],
-        clay:       [0, 3],
-        goldBrick:  [0, 4],
-        ash:        [0, 5],
-        stoneBrick: [1, 0],
-        stoneBlock: [1, 1]
+        default: {
+          grass:      [0, 0],
+          swamp:      [0, 1],
+          mud:        [0, 2],
+          clay:       [0, 3],
+          ash:        [0, 4],
+        },
+        building: {
+          stoneBrick: [1, 0],
+          stoneBlock: [1, 1],
+          goldBrick:  [1, 2]
+        }
       }
     };
 
@@ -53,7 +62,7 @@ class World {
    *  Load in all the tiles required for the world
    */
   load() {
-    this.tileIndex.default.tileset = loadImage('tiles/worldBlocks16x16.png');
+    this.tileIndex.default.tileset = loadImage('tiles/biome-default-16.png');
     this.tileIndex.jungle.tileset  = loadImage('tiles/biome-jungle-16.png');
 
     // By default, the image will be transparent black
@@ -66,7 +75,15 @@ class World {
   /*
    *  Initialise the world image using tiles
    */
-  init() {
+  init(seed) {
+    // Seed the world
+    if (!seed) {
+      // If no seed was provided, produce a string of random chars
+      seed = random(0, 1e6);
+    }
+    this.seed = seed;
+    noiseSeed(seed);
+
     // Create a buffer to draw the tiles to. It will be transparent black by default
     this.buffer = createGraphics(width, height);
 
@@ -81,8 +98,9 @@ class World {
     for (let i = 0; i < this.mapHeight; i++) {
       for (let j = 0; j < this.mapWidth; j++) {
         // Make some noise
-        let tileNoise = this.generateNoise(i, j, this.tileNoiseFrequency),
-            biomeNoise = this.generateNoise(i, j, this.biomeNoiseFrequency);
+        let tileNoise = this.generateNoise(i, j, this.tileNoiseFrequency, 0),
+            subNoise = this.generateNoise(i, j, this.subNoiseFrequency, 1),
+            biomeNoise = this.generateNoise(i, j, this.biomeNoiseFrequency, 2);
 
         // Store the noise in a map
         this.noiseMap[this.lin_ij(i, j)] = [tileNoise, biomeNoise];
@@ -90,9 +108,12 @@ class World {
         // Use noise to select a biome
         let biome = this.biomeFromNoise(biomeNoise);
 
+        // Use noise and the biome to select a sub-biome
+        let subBiome = this.subBiomeFromNoise(subNoise, biome);
+
         // Get the index of the tile on the tileset
         // null will be returned for a none tile, so no drawing should be done.
-        let index = this.tileIndexFromNoise(tileNoise, biome);
+        let index = this.tileIndexFromNoise(tileNoise, subBiome, biome);
 
         // Apply some crude lighting
         this.buffer.tint((tileNoise - 0.15) / 0.25 * 255);
@@ -170,45 +191,74 @@ class World {
   /*
    *  Uses Perlin noise to determine which tile or biome to place in a given tile coordinate.
    *  Pass in the i,j coordinates of the tile, as well as the frequency of the noise to generate.
+   *  Optionally pass in an abitrary number for the type of noise. This allows disparate noises to
+   *  be generated from the same seed.
    */
-  generateNoise(i, j, f) {
+  generateNoise(i, j = 0, f = 1, t = 0) {
     return noise(i * f,
-                 j * f);
-  }
-
-  /*
-   *  Converts a noise value (range 0-1) to a tile index as [i, j] coordinates on the tileset
-   */
-  tileIndexFromNoise(n, biome) {
-    // Get the tileset for the biome
-    var tileset = this.tileIndex[biome];
-
-    // Map the noise value onto a tile
-    switch (biome) {
-      case 'jungle':
-        if (n < 0.28) return tileset.ash;
-        if (n < 0.30) return tileset.goldBrick;
-        if (n < 0.32) return tileset.clay;
-        if (n < 0.36) return tileset.mud;
-        if (n < 0.38) return tileset.swamp;
-        if (n < 0.40) return tileset.grass;
-        break;
-
-      default:
-        if (n < 0.30) return tileset.concrete;
-        if (n < 0.32) return tileset.steel;
-        if (n < 0.34) return tileset.creepyBrick;
-        if (n < 0.36) return tileset.sandstone;
-        if (n < 0.40) return tileset.clay;
-    }
-    return this.tileIndex.none;
+                 j * f,
+                 t);
   }
 
   /*
    *  Converts a noise value (range 0-1) to the name of a biome as a string
    */
   biomeFromNoise(n) {
-    return n < 0.5 ? 'default' : 'jungle';
+    return n > 0.5 ? 'jungle' : 'default';
+  }
+
+  subBiomeFromNoise(n) {
+    return n > 0.8 ? 'building': 'default';
+  }
+
+  /*
+   *  Converts a noise value (range 0-1) to a tile index as [i, j] coordinates on the tileset
+   */
+  tileIndexFromNoise(n, subBiome, biome) {
+    // Air threshold, no further checks needed
+    if (n >= 0.4) {
+      return this.tileIndex.none;
+    }
+
+    // Get the tileset for the biome
+    var tileset = this.tileIndex[biome][subBiome];
+
+    // Map the noise value onto a tile
+    switch (biome) {
+      case 'jungle':
+        switch (subBiome) {
+          case 'building':
+            if (n < 0.30) return tileset.goldBrick;
+            if (n < 0.35) return tileset.stoneBlock;
+            if (n < 0.40) return tileset.stoneBrick;
+            break;
+
+          default:
+            if (n < 0.28) return tileset.ash;
+            if (n < 0.32) return tileset.clay;
+            if (n < 0.36) return tileset.mud;
+            if (n < 0.38) return tileset.swamp;
+            if (n < 0.40) return tileset.grass;
+        }
+        break;
+
+      default:
+        switch (subBiome) {
+          case 'building':
+            if (n < 0.32) return tileset.steel;
+            if (n < 0.34) return tileset.creepyBrick;
+            if (n < 0.36) return tileset.sandstone;
+            break;
+
+          default:
+            if (n < 0.30) return tileset.concrete;
+            if (n < 0.40) return tileset.clay;
+
+        }
+    }
+
+    // No specified tile -> air
+    return this.tileIndex.none;
   }
 
   /*

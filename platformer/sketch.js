@@ -1,8 +1,7 @@
-/*global Player, World, Grapple, SawBlade*/
+/*global Player, World*/
 
 var player,
-    world,
-    grapple;
+    world;
 
 function preload() {
   world = new World();
@@ -13,7 +12,6 @@ function setup() {
   createCanvas(windowWidth, windowHeight);
   world.init();
   player = new Player(200, 200);
-  grapple = new Grapple(player.position);
 
   createSeedUi();
 }
@@ -21,18 +19,17 @@ function setup() {
 function draw() {
   world.update();
   world.draw();
-  grapple.update();
+
   player.update();
   player.draw();
-  grapple.draw();
 }
 
 function mousePressed() {
-  grapple.onMousePressed();
+  player.grapple.onMousePressed();
 }
 
 function mouseReleased() {
-  grapple.onMouseReleased();
+  player.grapple.onMouseReleased();
 }
 
 

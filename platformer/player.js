@@ -1,4 +1,4 @@
-/*global world, Sprite*/
+/*global world, Sprite, Grapple*/
 
 class Player {
 
@@ -32,6 +32,9 @@ class Player {
 
     // Sprite - not actually implemented yet
     this.sprite = new Sprite(x, y, 'assets/player.png');
+
+    // Grappling hook
+    this.grapple = new Grapple(this.position);
   }
 
   get x() {
@@ -53,13 +56,21 @@ class Player {
   }
 
   draw() {
+    // Replace this with a sprite eventually
     rect(this.x, this.y, this.w, this.h);
+
+    // Grapple
+    this.grapple.draw();
   }
 
 
   update() {
+    // Update grapple and apply force to player if required
+    this.grapple.update();
+
     // Check keyboard inputs
     this.checkKeyboardInputs();
+
 
     // Apply the equations of motion to move the player
     this.move();

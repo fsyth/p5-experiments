@@ -1,12 +1,13 @@
-/*global player, world*/
+/*global world*/
 
 class Grapple {
 
   /*
    *  Construct it with a vector for the start point
    */
-  constructor(startPt) {
-    this.startPoint = startPt;
+  constructor(player) {
+    this.player = player;
+    this.startPoint = player.position;
     this.endPoint = null;
     this.targetPoint = null;
     this.velocity = null;
@@ -37,7 +38,7 @@ class Grapple {
         this.drawState = this.drawExtended;
 
         // Apply a force to the player in towards endpoint
-        player.addForceVec(
+        this.player.addForceVec(
           p5.Vector.sub(this.endPoint, this.startPoint).mult(this.stiffness).limit(this.maxForce));
 
       } else if (p5.Vector.sub(this.endPoint, this.startPoint).magSq() > sq(this.maxLength)) {

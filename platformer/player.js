@@ -34,7 +34,7 @@ class Player {
     this.sprite = new Sprite(x, y, 'assets/player.png');
 
     // Grappling hook
-    this.grapple = new Grapple(this.position);
+    this.grapple = new Grapple(this);
   }
 
   get x() {

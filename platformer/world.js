@@ -100,6 +100,9 @@ class World {
     this.noiseMap = new Array(this.mapWidth * this.mapHeight);
     this.groundMap = new Array(this.mapWidth * this.mapHeight).fill(false);
 
+    // Make sure old colliders are cleared if regenerating
+    this.colliders = [];
+
     for (let i = 0; i < this.mapHeight; i++) {
       for (let j = 0; j < this.mapWidth; j++) {
         // Make some noise

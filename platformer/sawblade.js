@@ -6,6 +6,7 @@ class SawBlade {
     this.position = createVector(x, y);
     this.radius = r;
     this.detectionRadius = this.radius * 3;
+    this.isColliding = false;
 
     // Sprite - not actually implemented yet
     this.sprite = new Sprite(x, y, 'assets/sawblade.png');
@@ -38,11 +39,7 @@ class SawBlade {
   }
 
   update() {
-    if (this.checkCollisionPlayer()) {
-      fill(255, 0, 0);
-    } else {
-      fill(255);
-    }
+    this.isColliding = this.checkCollisionPlayer();
   }
 
   /*
@@ -69,6 +66,12 @@ class SawBlade {
   }
 
   draw() {
+    if (this.isColliding) {
+      fill(255, 0, 0);
+    } else {
+      fill(255);
+    }
+
     ellipse(this.x,
             this.y,
             this.radius * 2,

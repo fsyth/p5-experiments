@@ -1,3 +1,5 @@
+/*global SawBlade*/
+
 /*
  *  A class for randomly generated terrain, with methods for ground detection
  */
@@ -56,6 +58,9 @@ class World {
     // Dirty flag to keep track of changes made to the buffer
     // Dirty will be set when a tile is created or destroyed, prompting pixel loads and updates.
     this.dirty = false;
+
+    // List of objects in the world to check player for collision against
+    this.colliders = [];
   }
 
   /*
@@ -120,6 +125,9 @@ class World {
 
         // Create the specified tile
         this.createTile(index, biome, i, j);
+
+        // Create a collideable object based on noise too, if required
+        this.createCollidable(tileNoise, i, j);
       }
     }
 
@@ -326,7 +334,6 @@ class World {
       }
     }
 
-
     // These methods should work, but there may be something wrong with p5's current implementation
 
     /*
@@ -362,6 +369,32 @@ class World {
   }
 
   /*
+   *  Creates a collidable object based on the noise value at the given tile coordinates
+   */
+  createCollidable(noise, i, j) {
+    // Convert from tile coordinates to pixel coordinates (top-left corner)
+    let [x, y] = this.xy_ij(i, j);
+
+    if (noise > 0.8) {
+      // Sawblade
+      this.addCollider(new SawBlade(
+        x + 0.5 * this.tileSizeDrawn,
+        y + 0.5 * this.tileSizeDrawn,
+        this.tileSizeDrawn / 2
+      ));
+    }
+  }
+
+  /*
+   *  Calls update on the world's collidables
+   */
+  update() {
+    for (let c of this.colliders) {
+      c.update();
+    }
+  }
+
+  /*
    *  Draws the underlying generated image.
    */
   draw() {
@@ -373,6 +406,11 @@ class World {
 
     background(230, 250, 250);
     image(this.buffer, 0, 0, width, height);
+
+    // Draw all the collideable objects too
+    for (let c of this.colliders) {
+      c.draw();
+    }
   }
 
   /*
@@ -414,7 +452,6 @@ class World {
     return false;
   }
 
-
   /*
    *  Tests whether any of the pixels in a given rectangle are ground.
    *  Test case:
@@ -440,5 +477,25 @@ class World {
    */
   spriteIntersectsGround(sprite) {
     return this.rectIntersectsGround(sprite.x, sprite.y, sprite.w, sprite.h);
+  }
+
+  /*
+   *  Adds an object to the list of collidables. Collisions can be checked for by calling
+   *  world.update
+   */
+  addCollider(obj) {
+    this.colliders.push(obj);
+  }
+
+  /*
+   *  Removes an object from the list of colliders
+   */
+  removeCollider(obj) {
+    let i = this.colliders.indexOf(obj);
+    if (i === -1) {
+      console.error('Collider not found: ', obj);
+    } else {
+      this.colliders.splice(i, 1);
+    }
   }
 }

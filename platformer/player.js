@@ -71,7 +71,6 @@ class Player {
     // Check keyboard inputs
     this.checkKeyboardInputs();
 
-
     // Apply the equations of motion to move the player
     this.move();
 
@@ -80,6 +79,9 @@ class Player {
 
     // Finally update the position
     this.updatePosition();
+
+    // Move screen if the player has gone offscreen
+    this.moveScreen();
   }
 
   updatePosition() {
@@ -92,33 +94,27 @@ class Player {
   }
 
   checkGroundCollision() {
-    // If the player is an the bottom of the map set grounded to true
-    if (this.positionNew.y + this.h >= height) {
-      this.grounded = true;
-    } else {
-      // Somewhere between positionNew and Old the ground exists
+    // Somewhere between positionNew and Old the ground exists
 
-      /*
-            X     X   <-PLAYER
-            X     X
-            OOOOOOO
-                            Air
-          ###   ######      Ground
-      ##################### Ground
-      */
+    /*
+          X     X   <-PLAYER
+          X     X
+          OOOOOOO
+                          Air
+        ###   ######      Ground
+    ##################### Ground
+    */
 
-      for (let y = this.y; y < this.positionNew.y; y++) {
-        if (world.lineHIntersectsGround(this.positionNew.x, y + this.h, this.w)) {
-          // Set the new y position
-          this.positionNew.y = y;
-          this.grounded = true;
-          return;
-        }
+    for (let y = this.y; y < this.positionNew.y; y++) {
+      if (world.lineHIntersectsGround(this.positionNew.x, y + this.h, this.w)) {
+        // Set the new y position
+        this.positionNew.y = y;
+        this.grounded = true;
+        return;
       }
-
-      this.grounded = false;
     }
 
+    this.grounded = false;
   }
 
   checkWallCollision() {
@@ -216,12 +212,6 @@ class Player {
     this.positionNew.x = this.x + this.velocity.x;
     this.positionNew.y = this.y + this.velocity.y;
 
-    // If the player goes offscreen wrap around
-    this.positionNew.x = (this.positionNew.x + width) % width;
-    if (this.positionNew.y > (height - this.h)) {
-        this.positionNew.y = height - this.h;
-    }
-
     // Clear accelerations for next time
     this.acceleration.x = this.acceleration.y = 0;
 
@@ -229,5 +219,24 @@ class Player {
     if (this.grounded) this.velocity.y = 0;
     if (this.wall) this.velocity.x = 0;
 
+  }
+
+  moveScreen() {
+    // If the player goes offscreen, move the screen and wraparound
+    if (this.x + this.w < 0) {
+      world.moveScreen('l');
+      this.x += width;
+    } else if (this.x > width) {
+      world.moveScreen('r');
+      this.x -= width;
+    }
+
+    if (this.y + this.h < 0) {
+      world.moveScreen('u');
+      this.y += height - this.h;
+    } else if (this.y > height) {
+      world.moveScreen('d');
+      this.y -= height;
+    }
   }
 }

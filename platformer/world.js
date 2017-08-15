@@ -79,8 +79,14 @@ class World {
 
   /*
    *  Initialise the world image using tiles
+   *  Optionally provide an integer as a seed for world generation
+   *  Additional arguments can be passed to generate screens of tiles adjacent to the starting
+   *  screen.
+   *  @param {Number} seed   Seed for world generation
+   *  @param {Number} si = 0 Row index of the screen
+   *  @param {Number} sj = 0 Column index of the screen
    */
-  init(seed) {
+  init(seed, si = 0, sj = 0) {
     // Seed the world
     if (!seed) {
       // If no seed was provided, produce a string of random chars
@@ -88,6 +94,9 @@ class World {
     }
     this.seed = seed;
     noiseSeed(seed);
+
+    this.screenRow = si;
+    this.screenCol = sj;
 
     // Create a buffer to draw the tiles to. It will be transparent black by default
     this.buffer = createGraphics(width, height);
@@ -106,9 +115,9 @@ class World {
     for (let i = 0; i < this.mapHeight; i++) {
       for (let j = 0; j < this.mapWidth; j++) {
         // Make some noise
-        let tileNoise = this.generateNoise(i, j, this.tileNoiseFrequency, 0),
-            subNoise = this.generateNoise(i, j, this.subNoiseFrequency, 1),
-            biomeNoise = this.generateNoise(i, j, this.biomeNoiseFrequency, 2);
+        let tileNoise = this.generateNoise(i, j, this.tileNoiseFrequency, 0, si, sj),
+            subNoise = this.generateNoise(i, j, this.subNoiseFrequency, 1, si, sj),
+            biomeNoise = this.generateNoise(i, j, this.biomeNoiseFrequency, 2, si, sj);
 
         // Store the noise in a map
         this.noiseMap[this.lin_ij(i, j)] = [tileNoise, biomeNoise];
@@ -135,6 +144,31 @@ class World {
     }
 
     this.buffer.noTint();
+  }
+
+  moveScreen(direction) {
+    switch (direction.charAt(0).toLowerCase()) {
+      case 'l':
+        this.screenCol--;
+        break;
+
+      case 'r':
+        this.screenCol++;
+        break;
+
+      case 'u':
+        this.screenRow--;
+        break;
+
+      case 'd':
+        this.screenRow++;
+        break;
+
+      default:
+        throw 'Invalid direction to move screen';
+    }
+
+    this.init(this.seed, this.screenRow, this.screenCol);
   }
 
   /*
@@ -205,9 +239,9 @@ class World {
    *  Optionally pass in an abitrary number for the type of noise. This allows disparate noises to
    *  be generated from the same seed.
    */
-  generateNoise(i, j = 0, f = 1, t = 0) {
-    return noise(i * f,
-                 j * f,
+  generateNoise(i, j = 0, f = 1, t = 0, si = 0, sj = 0) {
+    return noise(f * (i + si * this.mapHeight),
+                 f * (j + sj * this.mapWidth),
                  t);
   }
 

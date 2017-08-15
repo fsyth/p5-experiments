@@ -226,17 +226,21 @@ class Player {
     if (this.x + this.w < 0) {
       world.moveScreen('l');
       this.x += width;
+      if (this.grapple.endPoint) this.grapple.endPoint.x += width;
     } else if (this.x > width) {
       world.moveScreen('r');
       this.x -= width;
+      if (this.grapple.endPoint) this.grapple.endPoint.x -= width;
     }
 
     if (this.y + this.h < 0) {
       world.moveScreen('u');
       this.y += height - this.h;
+      if (this.grapple.endPoint) this.grapple.endPoint.y += height - this.h;
     } else if (this.y > height) {
       world.moveScreen('d');
       this.y -= height;
+      if (this.grapple.endPoint) this.grapple.endPoint.y -= height;
     }
   }
 }
